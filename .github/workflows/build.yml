@@ -11,10 +11,6 @@ on:
 permissions:
   contents: write
 
-env:
-  # ExifTool's Windows package is versioned in its filename, so this needs
-  # bumping occasionally. Latest version: https://exiftool.org
-  EXIFTOOL_VERSION: "13.59"
 
 jobs:
   check:
@@ -91,19 +87,19 @@ jobs:
       - name: Fetch ExifTool
         shell: pwsh
         run: |
-          $ErrorActionPreference = "Stop"
-          $v = (Invoke-WebRequest -Uri "https://exiftool.org/ver.txt" -UseBasicParsing).Content.Trim()
-          Invoke-WebRequest -Uri "https://exiftool.org/exiftool-${v}_64.zip" `
-                            -OutFile exiftool.zip
-          Expand-Archive exiftool.zip -DestinationPath exiftool_extracted
-          $root = Get-ChildItem exiftool_extracted -Directory | Select-Object -First 1
-          if (-not $root) { $root = Get-Item exiftool_extracted }
-          # ships as exiftool(-k).exe; the -k makes it wait for a keypress
-          $exe = Get-ChildItem $root.FullName -Filter "exiftool*.exe" |
-                 Select-Object -First 1
-          Copy-Item $exe.FullName "exiftool.exe"
-          Copy-Item (Join-Path $root.FullName "exiftool_files") "exiftool_files" -Recurse
-          Remove-Item exiftool.zip, exiftool_extracted -Recurse -Force
+          # exiftool.org no longer serves the versioned zip directly (it points
+          # at SourceForge), so fetch through Chocolatey, which is preinstalled
+          # on the runner and tracks the current release itself.
+          choco install exiftool --no-progress -y
+          $base = "C:\ProgramData\chocolatey\lib\exiftool"
+          $exe = Get-ChildItem $base -Recurse -Filter "exiftool*.exe" |
+                 Where-Object { $_.Extension -eq ".exe" } | Select-Object -First 1
+          if (-not $exe) { throw "exiftool.exe not found after install" }
+          Copy-Item $exe.FullName "exiftool.exe" -Force
+          $files = Get-ChildItem $base -Recurse -Directory -Filter "exiftool_files" |
+                   Select-Object -First 1
+          if ($files) { Copy-Item $files.FullName "exiftool_files" -Recurse -Force }
+          .\exiftool.exe -ver
 
       - name: Verify the helper programs run
         shell: pwsh
