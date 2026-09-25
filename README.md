@@ -4,7 +4,7 @@
 
 # GoPro Real Time
 
-**Recover the true wall-clock time of GoPro footage, label experimental phases from photo timestamps, and cut analysis-ready trial clips — without touching the originals.**
+**Recover the true wall-clock time of GoPro footage, label experimental phases from photo timestamps, and cut analysis-ready trial clips, without touching the originals.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey.svg)](#installation)
@@ -44,7 +44,7 @@ The problem it was built for: a camera records continuously for 12 minutes; the 
 
 Doing that by hand means scrubbing through footage looking for the moment something happened, writing down timecodes, and hoping the two cameras agreed about the time. GoPro Real Time does it from the metadata instead: the photographs *are* the phase boundaries, and their positions inside the video are a subtraction.
 
-Everything it writes is a new file. Original recordings are never modified.
+Everything it writes is a new file. Original recordings are not modified.
 
 ## What it does
 
@@ -56,7 +56,7 @@ Everything it writes is a new file. Original recordings are never modified.
 
 **Turns photographs into phase labels.** Take a photo when a phase begins and the time is already recorded in its EXIF. *Match photos to clips* scans a folder, keeps only the shots taken while the loaded videos were rolling, and turns them into labelled events. Each event runs until the next, so four photographs become three labelled phases.
 
-**Writes the clock onto the video.** Either as a subtitle sidecar — instant, lossless, toggleable in VLC or mpv — or burned into the pixels at a resolution you choose.
+**Writes the clock onto the video.** Either as a subtitle sidecar, instant, lossless, toggleable in VLC or mpv, or burned into the pixels at a resolution you choose.
 
 **Cuts one file per trial.** From the first phase you intend to score to the end of the run, with padding, by lossless stream copy. Subtitles are re-timed to match the cut exactly, and a manifest records how every clip maps back to its source.
 
