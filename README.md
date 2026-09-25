@@ -9,7 +9,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-lightgrey.svg)](#installation)
 [![Python](https://img.shields.io/badge/python-3.9%2B-3776AB.svg?logo=python&logoColor=white)](#running-from-source)
-[![Build portable EXE](https://github.com/OWNER/gopro-real-time/actions/workflows/build.yml/badge.svg)](../../actions/workflows/build.yml)
+[![Build portable EXE](https://github.com/tasos24gnr/gopro-real-time/actions/workflows/build.yml/badge.svg)](../../actions/workflows/build.yml)
 
 </div>
 

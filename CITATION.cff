@@ -3,12 +3,12 @@ title: "GoPro Real Time"
 message: "If you use this software in published work, please cite it."
 type: software
 authors:
-  - given-names: "<YOUR FIRST NAME>"
-    family-names: "<YOUR SURNAME>"
+  - given-names: "Anastasios"
+    family-names: "Benos"
     email: "infinite245k@gmail.com"
     # orcid: "https://orcid.org/0000-0000-0000-0000"
     # affiliation: "<YOUR INSTITUTION>"
-repository-code: "https://github.com/OWNER/gopro-real-time"
+repository-code: "https://github.com/tasos24gnr/gopro-real-time"
 abstract: >-
   A Windows application that recovers the true wall-clock recording time of
   GoPro footage from embedded metadata, annotates experimental phases from the
