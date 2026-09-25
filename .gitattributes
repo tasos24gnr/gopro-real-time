@@ -1,0 +1,15 @@
+# Normalise text files in the repository, but keep Windows line endings on the
+# files Windows actually executes. cmd.exe mis-parses goto labels and multi-line
+# blocks in a .bat saved with LF endings.
+* text=auto eol=lf
+
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+README_FIRST.txt text eol=crlf
+
+*.pyw       text eol=lf
+*.py        text eol=lf
+
+*.ico       binary
+*.png       binary
