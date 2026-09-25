@@ -1,0 +1,176 @@
+name: Build portable Windows app
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  # ExifTool's Windows package is versioned in its filename, so this needs
+  # bumping occasionally. Latest version: https://exiftool.org
+  EXIFTOOL_VERSION: "13.59"
+
+jobs:
+  check:
+    name: Syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Compile
+        run: python -W error::SyntaxWarning -m py_compile GoProRealTime.pyw
+      - name: Engine imports and behaves without a display
+        run: |
+          python - <<'PY'
+          import importlib.machinery, importlib.util
+          loader = importlib.machinery.SourceFileLoader("grt", "GoProRealTime.pyw")
+          grt = importlib.util.module_from_spec(
+              importlib.util.spec_from_loader("grt", loader))
+          loader.exec_module(grt)
+
+          # timezone offsets arrive in several shapes from the toolchain
+          cases = {"-04:00": -14400, "+05:30": 19800, "-240": -14400,
+                   "330": 19800, "-4": -14400, "+0530": 19800,
+                   "0": 0, "": None, "junk": None}
+          for text, want in cases.items():
+              got = grt.parse_offset(text)
+              assert got == want, f"parse_offset({text!r}) -> {got}, want {want}"
+
+          # markers split into runs and become labelled spans
+          ms = [{"epoch": 1000 + t, "name": n} for t, n in (
+              (120, "Habituation"), (300, "Exposure"),
+              (480, "Post-exposure"), (600, "END"))]
+          runs = grt.runs_from_markers(ms)
+          assert len(runs) == 1, runs
+          spans = grt.spans_from_markers(ms, 1000, 769.0)
+          assert [n for _, _, n in spans] == [
+              "Habituation", "Exposure", "Post-exposure"], spans
+
+          # a trial can start at a chosen phase
+          a, b, name = grt.trial_window(runs[0], 10, "Exposure")
+          assert name == "Exposure" and a == 1000 + 290, (a, b, name)
+
+          print("engine checks passed")
+          PY
+
+  build:
+    name: Build portable bundle
+    needs: check
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install PyInstaller
+        run: python -m pip install --upgrade pip pyinstaller
+
+      - name: Fetch ffmpeg and ffprobe
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          Invoke-WebRequest -Uri "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip" `
+                            -OutFile ffmpeg.zip
+          Expand-Archive ffmpeg.zip -DestinationPath ffmpeg_extracted
+          $bin = Get-ChildItem ffmpeg_extracted -Recurse -Filter ffmpeg.exe |
+                 Select-Object -First 1
+          Copy-Item $bin.FullName .
+          Copy-Item (Join-Path $bin.Directory "ffprobe.exe") .
+          Remove-Item ffmpeg.zip, ffmpeg_extracted -Recurse -Force
+
+      - name: Fetch ExifTool
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $v = "${{ env.EXIFTOOL_VERSION }}"
+          Invoke-WebRequest -Uri "https://exiftool.org/exiftool-${v}_64.zip" `
+                            -OutFile exiftool.zip
+          Expand-Archive exiftool.zip -DestinationPath exiftool_extracted
+          $root = Get-ChildItem exiftool_extracted -Directory | Select-Object -First 1
+          if (-not $root) { $root = Get-Item exiftool_extracted }
+          # ships as exiftool(-k).exe; the -k makes it wait for a keypress
+          $exe = Get-ChildItem $root.FullName -Filter "exiftool*.exe" |
+                 Select-Object -First 1
+          Copy-Item $exe.FullName "exiftool.exe"
+          Copy-Item (Join-Path $root.FullName "exiftool_files") "exiftool_files" -Recurse
+          Remove-Item exiftool.zip, exiftool_extracted -Recurse -Force
+
+      - name: Verify the helper programs run
+        shell: pwsh
+        run: |
+          .\ffmpeg.exe -version | Select-Object -First 1
+          .\ffprobe.exe -version | Select-Object -First 1
+          .\exiftool.exe -ver
+
+      - name: Build
+        shell: pwsh
+        run: |
+          Copy-Item GoProRealTime.pyw grt_main.py
+          pyinstaller --noconfirm --clean --windowed --noupx `
+                      --name GoProRealTime --icon assets\scallop.ico grt_main.py
+
+      - name: Bundle helpers beside the executable
+        shell: pwsh
+        run: |
+          $dest = "dist\GoProRealTime"
+          Copy-Item ffmpeg.exe, ffprobe.exe, exiftool.exe $dest
+          Copy-Item exiftool_files $dest -Recurse
+          Copy-Item README.md, LICENSE $dest
+          Copy-Item docs -Destination "$dest\docs" -Recurse
+          Get-ChildItem $dest | Select-Object Name, Length
+
+      - name: Smoke test the built executable
+        shell: pwsh
+        run: |
+          # It must start, find its bundled tools and exit cleanly. Run it from
+          # a different directory so nothing is resolved from the build folder.
+          $exe = (Resolve-Path "dist\GoProRealTime\GoProRealTime.exe").Path
+          Push-Location $env:TEMP
+          $p = Start-Process $exe -PassThru
+          Start-Sleep -Seconds 12
+          if ($p.HasExited) {
+            Pop-Location
+            throw "GoProRealTime.exe exited on its own with code $($p.ExitCode)"
+          }
+          Stop-Process -Id $p.Id -Force
+          Pop-Location
+          Write-Host "started and stayed running"
+
+      - name: Package
+        shell: pwsh
+        run: |
+          Compress-Archive -Path "dist\GoProRealTime\*" `
+                           -DestinationPath "GoProRealTime_portable.zip" `
+                           -CompressionLevel Optimal
+          "{0:N0} MB" -f ((Get-Item GoProRealTime_portable.zip).Length / 1MB)
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GoProRealTime_portable
+          path: GoProRealTime_portable.zip
+          retention-days: 30
+
+      - name: Attach to release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: GoProRealTime_portable.zip
+          body: |
+            Unzip anywhere and run `GoProRealTime.exe`. Nothing to install.
+
+            On first launch Windows shows "Windows protected your PC" —
+            click **More info → Run anyway**. That warning appears for any
+            program without a code-signing certificate.
+
+            Bundles FFmpeg and ExifTool, which are separate works under their
+            own licenses.

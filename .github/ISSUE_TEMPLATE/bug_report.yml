@@ -1,0 +1,63 @@
+name: Bug report
+description: Something produced the wrong result, or stopped working
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The log pane reports the time source, precision grade and any warnings
+        for every file, and usually identifies the problem on its own.
+        [TROUBLESHOOTING.md](../blob/main/docs/TROUBLESHOOTING.md) covers the
+        known failure modes.
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what you got instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: Log output
+      description: Copy the text from the log pane at the bottom of the window.
+      render: text
+    validations:
+      required: true
+
+  - type: textarea
+    id: metadata
+    attributes:
+      label: Metadata of an affected file
+      description: |
+        ```
+        exiftool -CreationDate -CreateDate -TimeZone -Duration -CameraModelName -FirmwareVersion "D:\clip.MP4"
+        ```
+      render: text
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Shown in the window title bar.
+      placeholder: "GoPro Real Time 1.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: install
+    attributes:
+      label: How are you running it?
+      options:
+        - Portable build (GoProRealTime.exe)
+        - From source (python GoProRealTime.pyw)
+    validations:
+      required: true
+
+  - type: input
+    id: camera
+    attributes:
+      label: Camera
+      placeholder: "HERO13 Black, GPS on, no lock"

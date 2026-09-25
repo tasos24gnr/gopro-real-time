@@ -1,0 +1,47 @@
+# PyInstaller
+build/
+dist/
+*.spec
+grt_main.py
+
+# Bundled third-party programs (fetched at build time, not committed)
+ffmpeg.exe
+ffprobe.exe
+exiftool.exe
+exiftool(-k).exe
+exiftool_files/
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Application output
+*.srt
+*_ts.mp4
+*_ts_preview.mp4
+*_boris.mp4
+*_boris1280.mp4
+*_1080p.mp4
+*_4k.mp4
+*_burned.mp4
+*_subs.mp4
+trials.csv
+session.csv
+audit.tsv
+videos_*.csv
+matched_*/
+
+# Media and metadata dumps
+*.MP4
+*.mp4
+*.LRV
+*.THM
+*.JPG
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store

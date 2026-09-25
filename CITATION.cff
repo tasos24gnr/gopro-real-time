@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+title: "GoPro Real Time"
+message: "If you use this software in published work, please cite it."
+type: software
+authors:
+  - given-names: "<YOUR FIRST NAME>"
+    family-names: "<YOUR SURNAME>"
+    email: "infinite245k@gmail.com"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    # affiliation: "<YOUR INSTITUTION>"
+repository-code: "https://github.com/OWNER/gopro-real-time"
+abstract: >-
+  A Windows application that recovers the true wall-clock recording time of
+  GoPro footage from embedded metadata, annotates experimental phases from the
+  timestamps of marker photographs, and extracts labelled trial clips for
+  behavioural analysis. Timestamps are rendered as subtitle tracks or burned
+  into the image; trial clips are produced by lossless stream copy with
+  re-timed subtitles and an auditable manifest.
+keywords:
+  - behavioural-research
+  - ethology
+  - video-annotation
+  - timestamp
+  - gopro
+  - exiftool
+  - ffmpeg
+  - boris
+license: MIT
+version: "1.0"
+date-released: "2026-09-25"
