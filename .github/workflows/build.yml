@@ -92,7 +92,7 @@ jobs:
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          $v = "${{ env.EXIFTOOL_VERSION }}"
+          $v = (Invoke-WebRequest -Uri "https://exiftool.org/ver.txt" -UseBasicParsing).Content.Trim()
           Invoke-WebRequest -Uri "https://exiftool.org/exiftool-${v}_64.zip" `
                             -OutFile exiftool.zip
           Expand-Archive exiftool.zip -DestinationPath exiftool_extracted
